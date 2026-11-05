@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viewer 3D · IMS RT</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root[data-theme="dark"]{
+  --bg0:#0d1117;--bg1:#161b22;--bg2:#1c2128;--bg3:#21262d;
+  --border:#30363d;--t0:#e6edf3;--t1:#8b949e;--t2:#6e7681;
+  --blue:#58a6ff;--blue2:#1f6feb;--green:#3fb950;
+  --yellow:#e3b341;--red:#f85149;--purple:#bc8cff;
+  --canvas-bg:#0d1117;--grid1:#21262d;--grid2:#1c2128;
+  --shadow:rgba(0,0,0,0.45);
+}
+:root[data-theme="light"]{
+  --bg0:#f5f7fa;--bg1:#ffffff;--bg2:#f0f4f9;--bg3:#e8edf5;
+  --border:#d0d7e2;--t0:#1a2340;--t1:#5a6a8a;--t2:#8a9ab8;
+  --blue:#1d6fdb;--blue2:#1558b0;--green:#16a34a;
+  --yellow:#b45309;--red:#dc2626;--purple:#7c3aed;
+  --canvas-bg:#f0f4f9;--grid1:#dde3ed;--grid2:#e8edf5;
+  --shadow:rgba(0,0,0,0.08);
+}
+
+body{background:var(--bg0);color:var(--t0);
+  font-family:'Inter',system-ui,sans-serif;font-size:13px;
+  display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  transition:background .2s,color .2s}
+
+header{background:var(--bg1);border-bottom:1px solid var(--border);
+  padding:7px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+  box-shadow:0 1px 4px var(--shadow)}
+.title{font-weight:700;color:var(--blue);font-size:13px}
+
+.btn{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;
+  border-radius:6px;border:1px solid var(--border);background:var(--bg2);
+  color:var(--t0);cursor:pointer;font-size:11px;font-family:inherit;
+  text-decoration:none;transition:all .15s}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn.active{background:#1f3460;border-color:var(--blue);color:var(--blue)}
+:root[data-theme="light"] .btn.active{background:#dbeafe;border-color:var(--blue);color:var(--blue)}
+
+.theme-btn{padding:4px 11px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--t0);cursor:pointer;font-size:11px;
+  font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:4px;
+  margin-left:auto}
+.theme-btn:hover{border-color:var(--yellow);color:var(--yellow)}
+
+.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+.ws-dot.on{background:var(--green)}
+#ws-lbl{font-size:11px;color:var(--t1)}
+
+.layout{display:flex;flex:1;overflow:hidden}
+
+.ctrl{width:235px;min-width:235px;background:var(--bg1);
+  border-right:1px solid var(--border);padding:11px;
+  display:flex;flex-direction:column;gap:11px;overflow-y:auto;
+  box-shadow:1px 0 4px var(--shadow)}
+.sec{font-size:9.5px;color:var(--t2);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:4px}
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:var(--t1);margin-bottom:4px}
+.ctrl-row span{color:var(--t0);font-family:monospace}
+input[type=range]{width:100%;accent-color:var(--blue);background:none;margin-top:3px}
+
+.pied-list{display:flex;flex-direction:column;gap:3px;max-height:22vh;min-height:120px;overflow-y:auto;padding-right:4px;}
+.pied-list::-webkit-scrollbar { width: 6px; }
+.pied-list::-webkit-scrollbar-track { background: transparent; }
+.pied-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.pied-list::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+
+.pi{padding:4px 8px;border-radius:5px;border:1px solid transparent;
+  cursor:pointer;font-size:11px;font-family:monospace;color:var(--t1);
+  transition:all .15s;display:flex;justify-content:space-between;align-items:center}
+.pi:hover{border-color:var(--border);color:var(--t0)}
+.pi.sel{background:#1f3460;border-color:var(--blue);color:var(--blue)}
+.pi.done{color:var(--green)}
+:root[data-theme="light"] .pi.sel{background:#dbeafe;border-color:var(--blue);color:var(--blue)}
+:root[data-theme="light"] .pi.done{color:var(--green)}
+.pi-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+.palette-row{display:flex;gap:4px;margin-top:4px}
+.pal-btn{flex:1;padding:3px 0;border-radius:5px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--t1);cursor:pointer;font-size:10px;
+  font-family:inherit;transition:all .15s;text-align:center}
+.pal-btn:hover{border-color:var(--blue);color:var(--blue)}
+.pal-btn.active{background:#1f3460;border-color:var(--blue);color:var(--blue)}
+:root[data-theme="light"] .pal-btn.active{background:#dbeafe;border-color:var(--blue);color:var(--blue)}
+
+.stat-table{font-size:11px;width:100%}
+.stat-table td:first-child{color:var(--t2);padding:2px 0;padding-right:8px}
+.stat-table td:last-child{font-family:monospace;color:var(--t0)}
+
+.viewer-wrap{flex:1;position:relative;overflow:hidden}
+#c3d{width:100%;height:100%;display:block;cursor:grab}
+#c3d:active{cursor:grabbing}
+
+.ov-stream{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(13,17,23,.92);border:1px solid var(--blue);border-radius:8px;
+  padding:7px 14px;font-size:11px;color:var(--blue);display:none;text-align:center;
+  backdrop-filter:blur(4px);z-index:10;}
+:root[data-theme="light"] .ov-stream{background:rgba(255,255,255,.92);color:var(--blue)}
+.ov-stream.on{display:block}
+.pmini{height:3px;background:var(--bg3);border-radius:2px;margin-top:5px}
+.pmini-fill{height:100%;background:var(--blue);width:0%;transition:width .15s}
+
+.ov-info{position:absolute;bottom:10px;left:10px;
+  background:rgba(13,17,23,.85);border:1px solid var(--border);
+  border-radius:7px;padding:7px 11px;font-size:10px;
+  color:var(--t1);font-family:monospace;pointer-events:none;line-height:1.85;
+  backdrop-filter:blur(4px);z-index:10;}
+:root[data-theme="light"] .ov-info{background:rgba(255,255,255,.88);color:var(--t1)}
+.ov-info strong{color:var(--t0)}
+
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  color:var(--t2);font-size:13px;pointer-events:none;z-index:5;}
+.ph .big{font-size:52px}
+
+.axes-legend{position:absolute;bottom:10px;right:10px;
+  font-size:10px;font-family:monospace;line-height:1.9;
+  background:rgba(13,17,23,.75);border:1px solid var(--border);
+  border-radius:6px;padding:5px 9px;pointer-events:none;display:none;z-index:10;}
+:root[data-theme="light"] .axes-legend{background:rgba(255,255,255,.8)}
+.axes-legend.on{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">🍇 Viewer 3D — Nuage de Points RT</div>
+  <button class="btn" onclick="resetCam()">↺ Caméra</button>
+  <button class="btn" id="btn-axes"  onclick="toggleAxes()">📐 Axes</button>
+  <button class="btn" id="btn-grid"  onclick="toggleGrid()">⊞ Grille</button>
+  <button class="btn" id="btn-clip"  onclick="toggleClip()">✂ Clip Z</button>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙 Nuit</button>
+  <div class="ws-dot" id="ws-dot" style="margin-left:8px"></div>
+  <span id="ws-lbl">Déconnecté</span>
+</header>
+
+<div class="layout">
+
+  <div class="ctrl">
+
+    <div>
+      <div class="sec">Cibles disponibles (Défiler ▼)</div>
+      <div class="pied-list" id="pied-list">
+        <div style="color:var(--t2);font-size:11px;padding:4px;">Recherche en cours...</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec">Colorisation</div>
+      <div class="palette-row">
+        <button class="pal-btn active" id="pal-real"   onclick="setPalette('real')">RGB</button>
+        <button class="pal-btn"        id="pal-height" onclick="setPalette('height')">Haut.</button>
+        <button class="pal-btn"        id="pal-depth"  onclick="setPalette('depth')">Prof.</button>
+        <button class="pal-btn"        id="pal-mono"   onclick="setPalette('mono')">Mono</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec">Affichage</div>
+      <div class="ctrl-row">Taille points : <span id="lbl-size">4</span> px</div>
+      <input type="range" id="pt-size" min="1" max="15" step="1" value="4" oninput="setPtSize(this.value)">
+      
+      <div class="ctrl-row" style="margin-top:5px">Opacité</div>
+      <input type="range" id="opacity" min="0.1" max="1" step="0.05" value="1" oninput="setOpacity(this.value)">
+      
+      <div class="ctrl-row" style="margin-top:5px">Clip Z min</div>
+      <input type="range" id="clip-z" min="-2" max="2" step="0.05" value="-2" oninput="setClipZ(this.value)" disabled>
+    </div>
+
+    <div>
+      <div class="sec">Orientation 3D</div>
+      <div class="ctrl-row">Rotation X : <span id="lbl-rx">-90</span>°</div>
+      <input type="range" id="rot-x" min="-180" max="180" step="1" value="-90" oninput="updateRotation()">
+      
+      <div class="ctrl-row" style="margin-top:5px">Rotation Y : <span id="lbl-ry">0</span>°</div>
+      <input type="range" id="rot-y" min="-180" max="180" step="1" value="0" oninput="updateRotation()">
+      
+      <div class="ctrl-row" style="margin-top:5px">Rotation Z : <span id="lbl-rz">0</span>°</div>
+      <input type="range" id="rot-z" min="-180" max="180" step="1" value="0" oninput="updateRotation()">
+      
+      <button class="btn" style="width:100%; margin-top:8px; justify-content:center" onclick="resetRotationSliders()">🔄 Réinitialiser Rotation</button>
+    </div>
+
+    <div>
+      <div class="sec">Statistiques</div>
+      <table class="stat-table">
+        <tr><td>Cible</td><td id="st-pied">—</td></tr>
+        <tr><td>Points</td><td id="st-pts">—</td></tr>
+        <tr><td>Date</td><td id="st-date">—</td></tr>
+        <tr><td>Hauteur</td><td id="st-h">—</td></tr>
+        <tr><td>Largeur</td><td id="st-w">—</td></tr>
+        <tr><td>Prof.</td><td id="st-d">—</td></tr>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="viewer-wrap">
+    <canvas id="c3d"></canvas>
+
+    <div class="ph" id="ph">
+      <div class="big">🍇</div>
+      <div>Sélectionnez un modèle 3D dans la liste</div>
+    </div>
+
+    <div class="ov-stream" id="ov-stream">
+      <div>⬇ Réception — <span id="ov-pied">—</span></div>
+      <div style="font-size:10px;margin-top:2px">
+        <span id="ov-pct">0</span>% — <span id="ov-c">0</span>/<span id="ov-tot">0</span> chunks
+      </div>
+      <div class="pmini"><div class="pmini-fill" id="ov-fill"></div></div>
+    </div>
+
+    <div class="ov-info">
+      <strong>Cible</strong> <span id="oi-pied">—</span> &nbsp;|&nbsp;
+      <strong>Points</strong> <span id="oi-pts">—</span> &nbsp;|&nbsp;
+      <strong>Date</strong> <span id="oi-date">—</span>
+    </div>
+
+    <div class="axes-legend" id="axes-legend">
+      <span style="color:#f85149">■</span> X (largeur)<br>
+      <span style="color:#3fb950">■</span> Y (profondeur)<br>
+      <span style="color:#58a6ff">■</span> Z (hauteur)
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  THÈME JOUR / NUIT
+// ═══════════════════════════════════════════════════════════════════════
+
+const html  = document.documentElement;
+let isDark  = true;
+let palette = 'real';
+let clipZ   = false;
+let clipZVal= -2.0;
+
+function getThemeColors() {
+  const cs = getComputedStyle(html);
+  return {
+    canvasBg: cs.getPropertyValue('--canvas-bg').trim(),
+    grid1:    cs.getPropertyValue('--grid1').trim(),
+  };
+}
+
+function applyTheme(dark) {
+  isDark = dark;
+  html.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('theme-btn').textContent = dark ? '🌙 Nuit' : '☀️ Jour';
+  localStorage.setItem('ims-theme', dark ? 'dark' : 'light');
+  
+  const tc = getThemeColors();
+  renderer.setClearColor(tc.canvasBg === '' ? (dark ? 0x0d1117 : 0xf0f4f9) :
+    parseInt(tc.canvasBg.replace('#',''), 16));
+  
+  if (grid) {
+    grid.material.color.set(dark ? 0x21262d : 0xdde3ed);
+    grid.material.vertexColors = false;
+  }
+}
+function toggleTheme() { applyTheme(!isDark); }
+
+// ═══════════════════════════════════════════════════════════════════════
+//  THREE.JS CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════
+
+const canvas   = document.getElementById('c3d');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(0x0d1117);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 1000);
+camera.position.set(0, -2.0, 1.0);
+camera.up.set(0, 0, 1);
+
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+
+let grid = new THREE.GridHelper(6,24,0x21262d,0x1c2128);
+grid.rotation.x = Math.PI/2;
+scene.add(grid);
+
+const axes = new THREE.AxesHelper(0.6);
+axes.visible = false;
+scene.add(axes);
+
+let currentCloud = null;
+let lastPLYData  = null;
+
+function resize(){
+  const w=canvas.parentElement.clientWidth, h=canvas.parentElement.clientHeight;
+  if(w === 0 || h === 0) return;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+new ResizeObserver(resize).observe(canvas.parentElement);
+setTimeout(resize, 100);
+
+const cam={phi:1.2, theta:-0.8, r:2.5, tx:0, ty:0, tz:0};
+let drag=false,rightBtn=false,lx=0,ly=0;
+
+function applyCam(){
+  const x=cam.r*Math.sin(cam.phi)*Math.cos(cam.theta);
+  const y=cam.r*Math.sin(cam.phi)*Math.sin(cam.theta);
+  const z=cam.r*Math.cos(cam.phi);
+  camera.position.set(cam.tx+x,cam.ty+y,cam.tz+z);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+applyCam();
+
+canvas.addEventListener('mousedown',e=>{drag=true;rightBtn=e.button===2;lx=e.clientX;ly=e.clientY;});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('mouseup',()=>drag=false);
+window.addEventListener('mousemove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;
+  if(rightBtn){
+    cam.tx-=dx*0.002*cam.r;cam.tz+=dy*0.002*cam.r;
+  } else {
+    cam.theta-=dx*0.006;
+    cam.phi=Math.max(0.05,Math.min(Math.PI-0.05,cam.phi-dy*0.006));
+  }
+  applyCam();
+});
+canvas.addEventListener('wheel',e=>{
+  cam.r=Math.max(0.05,Math.min(50,cam.r*(1+e.deltaY*0.001)));
+  applyCam();e.preventDefault();
+},{passive:false});
+
+function resetCam(){cam.phi=1.2;cam.theta=-0.8;cam.r=2.5;cam.tx=cam.ty=cam.tz=0;applyCam();}
+(function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);})();
+
+function setPtSize(v){
+  document.getElementById('lbl-size').textContent = v;
+  if(currentCloud)currentCloud.material.size = parseFloat(v);
+}
+function setOpacity(v){if(currentCloud)currentCloud.material.opacity=parseFloat(v);}
+
+function toggleAxes(){
+  axes.visible=!axes.visible;
+  document.getElementById('btn-axes').classList.toggle('active',axes.visible);
+  document.getElementById('axes-legend').classList.toggle('on',axes.visible);
+}
+function toggleGrid(){grid.visible=!grid.visible;document.getElementById('btn-grid').classList.toggle('active',!grid.visible);}
+function toggleClip(){
+  clipZ=!clipZ;
+  document.getElementById('btn-clip').classList.toggle('active',clipZ);
+  document.getElementById('clip-z').disabled=!clipZ;
+  if(lastPLYData) reloadCloud();
+}
+function setClipZ(v){clipZVal=parseFloat(v);if(lastPLYData&&clipZ)reloadCloud();}
+
+function updateRotation(){
+  const rx = parseFloat(document.getElementById('rot-x').value);
+  const ry = parseFloat(document.getElementById('rot-y').value);
+  const rz = parseFloat(document.getElementById('rot-z').value);
+  
+  document.getElementById('lbl-rx').textContent = rx;
+  document.getElementById('lbl-ry').textContent = ry;
+  document.getElementById('lbl-rz').textContent = rz;
+  
+  if(currentCloud){
+    currentCloud.rotation.x = rx * (Math.PI / 180);
+    currentCloud.rotation.y = ry * (Math.PI / 180);
+    currentCloud.rotation.z = rz * (Math.PI / 180);
+  }
+}
+function resetRotationSliders(){
+  document.getElementById('rot-x').value = -90;
+  document.getElementById('rot-y').value = 0;
+  document.getElementById('rot-z').value = 0;
+  updateRotation();
+}
+
+function setPalette(name){
+  palette=name;
+  document.querySelectorAll('.pal-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pal-'+name).classList.add('active');
+  if(lastPLYData) reloadCloud();
+}
+
+function reloadCloud(){
+  if(!lastPLYData)return;
+  loadPCD(lastPLYData.buf, lastPLYData.pied, lastPLYData.date, false);
+}
+
+function heightColor(pos, nV){
+  const c = new Float32Array(nV * 3);
+  let minZ = Infinity, maxZ = -Infinity;
+  for(let i=0; i<nV; i++){
+    const z = pos[i*3+2];
+    if(z < minZ) minZ = z;
+    if(z > maxZ) maxZ = z;
+  }
+  const range = (maxZ - minZ) || 1.0;
+  for(let i=0; i<nV; i++){
+    const t = (pos[i*3+2] - minZ) / range;
+    c[i*3]   = Math.max(0, Math.min(1, 1.5 - Math.abs(4 * t - 3)));
+    c[i*3+1] = Math.max(0, Math.min(1, 1.5 - Math.abs(4 * t - 2)));
+    c[i*3+2] = Math.max(0, Math.min(1, 1.5 - Math.abs(4 * t - 1)));
+  }
+  return c;
+}
+
+function depthColor(pos, nV){
+  const c = new Float32Array(nV * 3);
+  let minY = Infinity, maxY = -Infinity;
+  for(let i=0; i<nV; i++){
+    const y = pos[i*3+1];
+    if(y < minY) minY = y;
+    if(y > maxY) maxY = y;
+  }
+  const range = (maxY - minY) || 1.0;
+  for(let i=0; i<nV; i++){
+    const t = (pos[i*3+1] - minY) / range;
+    c[i*3] = t; c[i*3+1] = 1-t; c[i*3+2] = 0.5;
+  }
+  return c;
+}
+
+function monoColor(nV){
+  const c = new Float32Array(nV * 3);
+  for(let i=0; i<nV; i++){ c[i*3]=0.65; c[i*3+1]=0.72; c[i*3+2]=0.82; }
+  return c;
+}
+
+function parsePLY(buffer){
+  const u8 = new Uint8Array(buffer);
+  
+  let headerEnd = -1;
+  for(let i=0; i<Math.min(u8.length-10, 8192); i++){
+    if(u8[i]===101 && u8[i+1]===110 && u8[i+2]===100 && u8[i+3]===95 && u8[i+4]===104 && u8[i+5]===101 && u8[i+6]===97 && u8[i+7]===100 && u8[i+8]===101 && u8[i+9]===114){
+      if(u8[i+10]===10){ headerEnd = i+11; break; }
+      if(u8[i+10]===13 && u8[i+11]===10){ headerEnd = i+12; break; }
+    }
+  }
+
+  if(headerEnd === -1){
+    return {tempPos: new Float64Array(0), cols: new Float32Array(0), nV: 0, hasColor: false};
+  }
+
+  const headerText = new TextDecoder('ascii').decode(u8.subarray(0, headerEnd));
+  const lines = headerText.split(/\r?\n/);
+
+  let isAscii = false, nV = 0;
+  const props = [];
+
+  for(const line of lines){
+    const parts = line.trim().split(/\s+/);
+    if(parts[0] === 'format' && parts[1] === 'ascii') isAscii = true;
+    if(parts[0] === 'element' && parts[1] === 'vertex') nV = parseInt(parts[2]);
+    if(parts[0] === 'property') props.push({type: parts[1], name: parts[2]});
+  }
+
+  const tempPos = new Float64Array(nV * 3);
+  const cols    = new Float32Array(nV * 3);
+  let hasColor  = false;
+
+  const rIdx = props.findIndex(p => ['red','r','diffuse_red'].includes(p.name));
+  const gIdx = props.findIndex(p => ['green','g','diffuse_green'].includes(p.name));
+  const bIdx = props.findIndex(p => ['blue','b','diffuse_blue'].includes(p.name));
+
+  if(isAscii){
+    const textData = new TextDecoder('ascii').decode(u8.subarray(headerEnd));
+    const dataLines = textData.trim().split(/\r?\n/);
+    const xIdx = props.findIndex(p => p.name === 'x');
+    const yIdx = props.findIndex(p => p.name === 'y');
+    const zIdx = props.findIndex(p => p.name === 'z');
+
+    let validCount = 0;
+    for(let i = 0; i < Math.min(nV, dataLines.length); i++){
+      const tokens = dataLines[i].trim().split(/\s+/);
+      if(tokens.length < 3) continue;
+
+      tempPos[validCount * 3]     = parseFloat(tokens[xIdx >= 0 ? xIdx : 0]) || 0;
+      tempPos[validCount * 3 + 1] = parseFloat(tokens[yIdx >= 0 ? yIdx : 1]) || 0;
+      tempPos[validCount * 3 + 2] = parseFloat(tokens[zIdx >= 0 ? zIdx : 2]) || 0;
+
+      if(rIdx >= 0 && gIdx >= 0 && bIdx >= 0 && tokens.length > Math.max(rIdx,gIdx,bIdx)){
+        let r = parseFloat(tokens[rIdx]), g = parseFloat(tokens[gIdx]), b = parseFloat(tokens[bIdx]);
+        if(r > 1 || g > 1 || b > 1){ r /= 255; g /= 255; b /= 255; }
+        cols[validCount * 3] = r; cols[validCount * 3 + 1] = g; cols[validCount * 3 + 2] = b;
+        hasColor = true;
+      }
+      validCount++;
+    }
+  } else {
+    let stride = 0;
+    const offsets = {};
+    for(const p of props){
+      offsets[p.name] = {offset: stride, type: p.type};
+      if(['float','float32','int','int32'].includes(p.type)) stride += 4;
+      else if(['double','float64'].includes(p.type)) stride += 8;
+      else if(['uchar','uint8','char','int8'].includes(p.type)) stride += 1;
+      else if(['ushort','uint16','short','int16'].includes(p.type)) stride += 2;
+      else stride += 4;
+    }
+
+    const view = new DataView(buffer, headerEnd);
+    const xProp = offsets['x'] || {offset: 0, type: 'float'};
+    const yProp = offsets['y'] || {offset: 4, type: 'float'};
+    const zProp = offsets['z'] || {offset: 8, type: 'float'};
+    
+    const rOff = offsets['red']?.offset ?? offsets['r']?.offset ?? offsets['diffuse_red']?.offset;
+    const gOff = offsets['green']?.offset ?? offsets['g']?.offset ?? offsets['diffuse_green']?.offset;
+    const bOff = offsets['blue']?.offset ?? offsets['b']?.offset ?? offsets['diffuse_blue']?.offset;
+
+    hasColor = (rOff !== undefined && gOff !== undefined && bOff !== undefined);
+
+    const getVal = (prop, base) => {
+      if(['double','float64'].includes(prop.type)) return view.getFloat64(base + prop.offset, true);
+      if(['int','int32'].includes(prop.type))      return view.getInt32(base + prop.offset, true);
+      return view.getFloat32(base + prop.offset, true);
+    };
+
+    for(let i = 0; i < nV; i++){
+      const base = i * stride;
+      if(base + stride > view.byteLength) break;
+
+      tempPos[i * 3]     = getVal(xProp, base) || 0;
+      tempPos[i * 3 + 1] = getVal(yProp, base) || 0;
+      tempPos[i * 3 + 2] = getVal(zProp, base) || 0;
+
+      if(hasColor){
+        cols[i * 3]     = view.getUint8(base + rOff) / 255;
+        cols[i * 3 + 1] = view.getUint8(base + gOff) / 255;
+        cols[i * 3 + 2] = view.getUint8(base + bOff) / 255;
+      }
+    }
+  }
+
+  return {tempPos, cols, nV, hasColor};
+}
+
+function loadPCD(buffer, pied_id, date, saveState=true){
+  document.getElementById('ph').style.display='none';
+  if(saveState) lastPLYData={buf:buffer, pied:pied_id, date:date};
+
+  const {tempPos, cols, nV, hasColor} = parsePLY(buffer);
+
+  if(nV === 0){
+    console.error("[PLY] 0 points extraits.");
+    return;
+  }
+
+  let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity, minZ=Infinity, maxZ=-Infinity;
+  for(let i=0; i<nV; i++){
+    const x = tempPos[i*3], y = tempPos[i*3+1], z = tempPos[i*3+2];
+    if(x<minX)minX=x; if(x>maxX)maxX=x;
+    if(y<minY)minY=y; if(y>maxY)maxY=y;
+    if(z<minZ)minZ=z; if(z>maxZ)maxZ=z;
+  }
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const cz = (minZ + maxZ) / 2;
+
+  const validIndices = [];
+  for(let i=0; i<nV; i++){
+     const z_relative = tempPos[i*3+2] - cz;
+     if(!clipZ || z_relative >= clipZVal) {
+         validIndices.push(i);
+     }
+  }
+
+  const nFinal = validIndices.length;
+  const finalPos = new Float32Array(nFinal * 3);
+  const rawC     = new Float32Array(nFinal * 3);
+
+  for(let j=0; j<nFinal; j++){
+     const i = validIndices[j];
+     finalPos[j*3]   = tempPos[i*3] - cx;
+     finalPos[j*3+1] = tempPos[i*3+1] - cy;
+     finalPos[j*3+2] = tempPos[i*3+2] - cz;
+
+     if (hasColor) {
+         rawC[j*3]   = cols[i*3];
+         rawC[j*3+1] = cols[i*3+1];
+         rawC[j*3+2] = cols[i*3+2];
+     }
+  }
+
+  let finalCols;
+  if (palette === 'real' && hasColor) finalCols = rawC;
+  else if (palette === 'height')      finalCols = heightColor(finalPos, nFinal);
+  else if (palette === 'depth')       finalCols = depthColor(finalPos, nFinal);
+  else                                finalCols = monoColor(nFinal);
+
+  const geom=new THREE.BufferGeometry();
+  geom.setAttribute('position',new THREE.BufferAttribute(finalPos,3));
+  geom.setAttribute('color',   new THREE.BufferAttribute(finalCols,3));
+
+  const mat=new THREE.PointsMaterial({
+    size: parseFloat(document.getElementById('pt-size').value || 4),
+    vertexColors: true, 
+    sizeAttenuation: false, 
+    transparent: true, 
+    opacity: parseFloat(document.getElementById('opacity').value || 1.0)
+  });
+
+  if(currentCloud)scene.remove(currentCloud);
+  currentCloud=new THREE.Points(geom,mat);
+  scene.add(currentCloud);
+
+  updateRotation(); 
+
+  const dx = (maxX - minX), dz = (maxZ - minZ), dy = (maxY - minY);
+  document.getElementById('st-pied').textContent = pied_id;
+  document.getElementById('st-pts').textContent  = nFinal.toLocaleString('fr');
+  document.getElementById('st-date').textContent = date;
+  document.getElementById('st-h').textContent    = dz.toFixed(3)+' m';
+  document.getElementById('st-w').textContent    = dx.toFixed(3)+' m';
+  document.getElementById('st-d').textContent    = dy.toFixed(3)+' m';
+  
+  document.getElementById('oi-pied').textContent = pied_id;
+  document.getElementById('oi-pts').textContent  = nFinal.toLocaleString('fr');
+  document.getElementById('oi-date').textContent = date;
+
+  const maxSpan = Math.max(dx, dz, dy) || 1.0;
+  cam.r = maxSpan * 2.2;
+  cam.tx=cam.ty=cam.tz=0;
+  applyCam();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  WEBSOCKET
+// ═══════════════════════════════════════════════════════════════════════
+
+// ➔ SÉCURITÉ WEBSOCKET : Assure que le port 8765 est ciblé vers localhost
+const host = location.hostname || "127.0.0.1";
+const WS_URL = `ws://${host}:8765`;
+
+let ws,reconn;
+const chunks={};
+
+function connectWS(){
+  ws=new WebSocket(WS_URL);
+  ws.onopen=()=>{
+    document.getElementById('ws-dot').classList.add('on');
+    document.getElementById('ws-lbl').textContent='Connecté';
+    ws.send(JSON.stringify({type:'list_pieds'}));
+    const p=new URLSearchParams(location.search);
+    const pid=p.get('pied'),dt=p.get('date');
+    if(pid&&dt)setTimeout(()=>ws.send(JSON.stringify({type:'request_ply',pied_id:pid,date:dt})),600);
+  };
+  ws.onclose=()=>{
+    document.getElementById('ws-dot').classList.remove('on');
+    document.getElementById('ws-lbl').textContent='Déconnecté';
+    clearTimeout(reconn);reconn=setTimeout(connectWS,3000);
+  };
+  ws.onmessage=e=>{
+      try {
+          let msg = JSON.parse(e.data);
+          dispatchWS(msg);
+      } catch (err) {
+          console.error(err);
+      }
+  };
+}
+
+function dispatchWS(msg){
+  switch(msg.type){
+    case 'ply_start': {
+      chunks[msg.pied_id]={arr:[],total:msg.total_chunks};
+      document.getElementById('ov-stream').classList.add('on');
+      document.getElementById('ov-pied').textContent=msg.pied_id;
+      document.getElementById('ov-tot').textContent=msg.total_chunks;
+      break;
+    }
+    case 'ply_chunk': {
+      if(!chunks[msg.pied_id])break;
+      chunks[msg.pied_id].arr.push(Uint8Array.from(atob(msg.data),c=>c.charCodeAt(0)));
+      const pct=Math.round((msg.chunk_idx+1)/msg.total_chunks*100);
+      document.getElementById('ov-pct').textContent=pct;
+      document.getElementById('ov-c').textContent=msg.chunk_idx+1;
+      document.getElementById('ov-fill').style.width=pct+'%';
+      break;
+    }
+    case 'ply_done': {
+      document.getElementById('ov-stream').classList.remove('on');
+      const ch=chunks[msg.pied_id];if(!ch)break;
+      const total=ch.arr.reduce((s,x)=>s+x.length,0);
+      const buf=new Uint8Array(total);
+      let off=0;for(const x of ch.arr){buf.set(x,off);off+=x.length;}
+      delete chunks[msg.pied_id];
+      loadPCD(buf.buffer,msg.pied_id,msg.date);
+      break;
+    }
+    case 'pied_list': {
+      const list = document.getElementById('pied-list');
+      if (list) list.innerHTML = '';
+      
+      if (!msg.pieds || msg.pieds.length === 0) {
+        if(list) list.innerHTML = '<div style="color:var(--t2);font-size:11px;padding:4px;">Aucun modèle 3D disponible</div>';
+      } else {
+        msg.pieds.forEach(p=>addPiedToList(p.pied_id,p.date));
+      }
+      break;
+    }
+    case 'ping': {
+      ws.send(JSON.stringify({type:'pong'}));
+      break;
+    }
+  }
+}
+
+try{
+  const bc=new BroadcastChannel('ply');
+  bc.onmessage=e=>{
+    if(e.data && e.data.buf) loadPCD(e.data.buf, e.data.pied_id, e.data.date);
+  };
+}catch(e){}
+
+const knownPieds = new Set();
+
+function addPiedToList(pied_id, date){
+  const uniqueKey = pied_id + '_' + date;
+  
+  if(knownPieds.has(uniqueKey)) return;
+  knownPieds.add(uniqueKey);
+  
+  const list = document.getElementById('pied-list');
+  const el = document.createElement('div');
+  el.className = 'pi done';
+  el.innerHTML = `<span style="display:flex;align-items:center;gap:5px">
+    <span class="pi-dot"></span>${pied_id}</span>
+    <span style="color:var(--t2);font-size:10px">${date}</span>`;
+    
+  el.onclick = () => {
+    document.querySelectorAll('.pi').forEach(x => x.classList.remove('sel'));
+    el.classList.add('sel');
+    if(ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({type: 'request_ply', pied_id: pied_id, date: date}));
+    }
+  };
+  list.appendChild(el);
+}
+
+const thSaved=localStorage.getItem('ims-theme');
+applyTheme(thSaved ? thSaved==='dark' : window.matchMedia('(prefers-color-scheme:dark)').matches);
+connectWS();
+</script>
+</body>
+</html>

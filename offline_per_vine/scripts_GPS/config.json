@@ -1,0 +1,11 @@
+{
+    "ppk": {
+        "date": "17/07/2025",
+        "start_time": "09:15",
+        "end_time": "10:15",
+        "acronyme": "BXME"
+    },
+    "gpslogger": {
+        "DESTINATION_FOLDER": "/home/jasser/Bureau/ims/Version_Off_line_pied_with_app/scripts_GPS"
+    }
+}

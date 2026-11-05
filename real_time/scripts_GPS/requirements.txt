@@ -1,0 +1,7 @@
+streamlit
+requests
+selenium
+webdriver-manager
+numpy
+python-dateutil
+pyproj

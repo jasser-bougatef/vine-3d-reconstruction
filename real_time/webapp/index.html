@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMS Bordeaux · Viticulture RT</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root[data-theme="dark"]{
+  --bg0:#0d1117;--bg1:#161b22;--bg2:#1c2128;--bg3:#21262d;
+  --border:#30363d;--t0:#e6edf3;--t1:#8b949e;--t2:#6e7681;
+  --blue:#58a6ff;--blue2:#1f6feb;--green:#3fb950;
+  --yellow:#e3b341;--red:#f85149;--purple:#bc8cff;--orange:#ffa657;
+  --shadow:rgba(0,0,0,0.4);
+}
+:root[data-theme="light"]{
+  --bg0:#f5f7fa;--bg1:#ffffff;--bg2:#f0f4f9;--bg3:#e8edf5;
+  --border:#d0d7e2;--t0:#1a2340;--t1:#5a6a8a;--t2:#8a9ab8;
+  --blue:#1d6fdb;--blue2:#1558b0;--green:#16a34a;
+  --yellow:#b45309;--red:#dc2626;--purple:#7c3aed;--orange:#c2410c;
+  --shadow:rgba(0,0,0,0.08);
+}
+
+body{background:var(--bg0);color:var(--t0);
+  font-family:'Inter',system-ui,sans-serif;font-size:13px;
+  min-height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  transition:background .2s,color .2s}
+
+header{background:var(--bg1);border-bottom:1px solid var(--border);
+  padding:8px 16px;display:flex;align-items:center;gap:10px;
+  position:sticky;top:0;z-index:100;flex-shrink:0;
+  box-shadow:0 1px 4px var(--shadow)}
+.logo{font-size:16px;font-weight:700;
+  background:linear-gradient(120deg,var(--blue),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-tabs{display:flex;gap:2px;margin-left:6px}
+.nav-tab{padding:5px 12px;border-radius:7px;border:none;
+  background:none;color:var(--t1);cursor:pointer;font-size:12px;
+  font-family:inherit;transition:all .15s}
+.nav-tab:hover{background:var(--bg3);color:var(--t0)}
+.nav-tab.active{background:var(--bg3);color:var(--t0);font-weight:600}
+
+.theme-btn{margin-left:auto;padding:5px 11px;border-radius:7px;
+  border:1px solid var(--border);background:var(--bg2);
+  color:var(--t0);cursor:pointer;font-size:12px;font-family:inherit;
+  transition:all .15s;display:flex;align-items:center;gap:5px}
+.theme-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+.mode-badge{padding:3px 10px;border-radius:10px;font-size:10px;
+  font-family:monospace;font-weight:600;margin-left:4px}
+.mode-sim{background:#2e1f00;color:var(--yellow);border:1px solid #4a3200}
+.mode-real{background:#12261e;color:var(--green);border:1px solid #1a4a2e}
+:root[data-theme="light"] .mode-sim{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+:root[data-theme="light"] .mode-real{background:#dcfce7;color:#166534;border-color:#86efac}
+
+.ws-badge{display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--t1);font-family:monospace;margin-left:6px}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--red);transition:background .3s}
+.ws-dot.on{background:var(--green)}
+
+.layout{display:flex;flex:1;overflow:hidden;min-height:0}
+.sidebar{width:252px;min-width:252px;background:var(--bg1);
+  border-right:1px solid var(--border);overflow-y:auto;
+  padding:11px;display:flex;flex-direction:column;gap:11px}
+.content{flex:1;overflow-y:auto;padding:13px;
+  display:flex;flex-direction:column;gap:11px}
+
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;box-shadow:0 1px 3px var(--shadow)}
+.card-hd{background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:7px 12px;font-size:10.5px;font-weight:600;color:var(--t1);
+  text-transform:uppercase;letter-spacing:.07em;
+  display:flex;align-items:center;gap:7px}
+.card-bd{padding:11px 13px}
+
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.metric{background:var(--bg2);border:1px solid var(--border);
+  border-radius:7px;padding:8px 10px}
+.metric .lb{font-size:9.5px;color:var(--t2);text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:3px}
+.metric .vl{font-size:16px;font-weight:700;font-family:monospace;color:var(--t0)}
+.metric .sb{font-size:9.5px;color:var(--t2);margin-top:1px}
+
+.gps-grid{font-family:monospace;font-size:11.5px;display:flex;flex-direction:column;gap:4px}
+.gps-row{display:flex;justify-content:space-between;color:var(--t1)}
+.gps-row span{color:var(--t0)}
+.q-badge{display:inline-block;padding:1px 7px;border-radius:10px;
+  font-size:10px;font-weight:600;font-family:monospace}
+.q1{background:#12261e;color:var(--green);border:1px solid #1a4a2e}
+.q2{background:#2e1f00;color:var(--yellow);border:1px solid #4a3200}
+.q5{background:#2e1216;color:var(--red);border:1px solid #4a1a1e}
+
+.phase-ind{display:flex;align-items:center;gap:6px;padding:5px 9px;
+  border-radius:7px;margin-top:6px;font-size:11px;font-weight:600;
+  font-family:monospace;transition:all .3s}
+.ph-aller{background:#1a3a1a;border:1px solid var(--green);color:var(--green)}
+.ph-retour{background:#1a2a40;border:1px solid var(--blue);color:var(--blue)}
+.ph-idle{background:var(--bg2);border:1px solid var(--border);color:var(--t2)}
+
+.fsm-bar{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.fsm-step{padding:3px 7px;border-radius:10px;font-size:9.5px;
+  font-family:monospace;font-weight:600;
+  background:var(--bg3);color:var(--t2);border:1px solid var(--border);transition:all .3s}
+.fsm-step.current{background:#1f3460;color:var(--blue);border-color:var(--blue2)}
+.fsm-step.done{background:#12261e;color:var(--green);border-color:#1a4a2e}
+.fsm-arrow{color:var(--t2);font-size:9px}
+
+.piquet-label{font-size:9.5px;color:var(--blue);font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;
+  border-left:3px solid var(--blue);padding-left:5px}
+.pied-row{display:flex;gap:4px;margin-bottom:5px}
+.pied-btn{flex:1;aspect-ratio:1;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--t1);cursor:pointer;font-size:10px;
+  font-family:monospace;font-weight:600;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.pied-btn:hover{border-color:var(--blue);color:var(--blue)}
+.pied-btn.p-active{background:#1a3a1a;border-color:var(--green);color:var(--green)}
+.pied-btn.p-done{background:#12261e;border-color:#1a4a2e;color:#3fb950aa}
+.pied-btn.p-stream{background:#1a2a40;border-color:var(--blue);color:var(--blue)}
+.pied-btn.p-sel{outline:2px solid var(--yellow);outline-offset:1px}
+
+.stream-prog{display:none;margin-top:8px}
+.stream-prog.on{display:block}
+.prog-lbl{font-size:10px;color:var(--t1);margin-bottom:4px;font-family:monospace}
+.prog-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .2s;width:0%}
+
+.preview-box{width:100%;border-radius:7px;background:var(--bg2);
+  border:1px solid var(--border);min-height:110px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center}
+.preview-box img{width:100%;border-radius:7px}
+.preview-ph{color:var(--t2);font-size:11px}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;
+  border-radius:7px;border:1px solid var(--border);background:var(--bg2);
+  color:var(--t0);cursor:pointer;font-size:11px;font-family:inherit;
+  text-decoration:none;transition:all .15s}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn.primary{background:var(--blue2);border-color:var(--blue);color:#fff}
+.btn.success{background:#12261e;border-color:var(--green);color:var(--green)}
+.btn.sm{padding:2px 8px;font-size:10px}
+
+.sim-ctrl{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px;color:var(--t1)}
+.sim-ctrl input{flex:1;accent-color:var(--yellow)}
+.sim-ctrl .sv{color:var(--yellow);font-family:monospace;min-width:26px}
+
+.log-box{background:#040608;border:1px solid var(--border);border-radius:7px;
+  padding:9px 12px;height:175px;overflow-y:auto;
+  font-family:monospace;font-size:11px;line-height:1.65}
+.ll{display:block}
+.ll.info{color:var(--blue)}.ll.ok{color:var(--green)}
+.ll.warn{color:var(--yellow)}.ll.err{color:var(--red)}.ll.sim{color:var(--orange)}
+.ll .ts{color:var(--t2);margin-right:5px}
+
+.alert-list{display:flex;flex-direction:column;gap:5px;max-height:105px;overflow-y:auto}
+.al{display:flex;gap:7px;padding:5px 9px;border-radius:5px;font-size:11px;animation:fi .3s}
+.al.warn{background:#2e1f00;border:1px solid #4a3200;color:var(--yellow)}
+.al.error{background:#2e1216;border:1px solid #4a1a1e;color:var(--red)}
+.al.info{background:#1c2333;border:1px solid #1f3460;color:var(--blue)}
+.al.sim{background:#2a1e00;border:1px solid #4a3800;color:var(--orange)}
+.al-ts{color:var(--t2);font-family:monospace;white-space:nowrap}
+
+.page{display:none}.page.active{display:block}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.dt{font-size:11px}
+.dt td:first-child{color:var(--t2);padding:3px 0;padding-right:10px}
+.dt td:last-child{font-family:monospace;color:var(--t0)}
+
+.lib-table{width:100%;border-collapse:collapse;font-size:11px}
+.lib-table th{text-align:left;padding:5px 8px;color:var(--t2);
+  font-weight:600;border-bottom:1px solid var(--border);
+  font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.lib-table td{padding:5px 8px;border-bottom:1px solid var(--bg3);font-family:monospace}
+.lib-table tr:hover td{background:var(--bg2)}
+
+@keyframes fi{from{opacity:0;transform:translateY(-3px)}to{opacity:1}}
+@media(max-width:680px){.sidebar{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🍇 IMS·RT</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showPage('viewer',this)">🔷 Viewer 3D</button>
+    <button class="nav-tab" onclick="showPage('library',this)">📁 Bibliothèque</button>
+  </div>
+  <div id="mode-badge" class="mode-badge mode-sim">SIM</div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙 Nuit</button>
+  <div class="ws-badge">
+    <div class="ws-dot" id="ws-dot"></div>
+    <span id="ws-label">Déconnecté</span>
+  </div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+
+  <div class="card">
+    <div class="card-hd">📡 GPS Live</div>
+    <div class="card-bd">
+      <div class="gps-grid">
+        <div class="gps-row">X_L93 <span id="gps-x">—</span></div>
+        <div class="gps-row">Y_L93 <span id="gps-y">—</span></div>
+        <div class="gps-row">Frame <span id="gps-frame">—</span></div>
+        <div class="gps-row">Qualité <span id="gps-q">—</span></div>
+      </div>
+      <div class="phase-ind ph-idle" id="phase-ind">⬤ IDLE</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">🤖 État robot</div>
+    <div class="card-bd">
+      <div class="fsm-bar">
+        <span class="fsm-step" id="s-IDLE">IDLE</span>
+        <span class="fsm-arrow">›</span>
+        <span class="fsm-step" id="s-PASS1_RECORDING">P1</span>
+        <span class="fsm-arrow">›</span>
+        <span class="fsm-step" id="s-TURNING">TURN</span>
+        <span class="fsm-arrow">›</span>
+        <span class="fsm-step" id="s-PASS2_RECORDING">P2</span>
+        <span class="fsm-arrow">›</span>
+        <span class="fsm-step" id="s-PROCESSING">3D</span>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--t1)">
+        Cible : <span id="active-pied" style="color:var(--t0);font-family:monospace">—</span><br>
+        <span style="color:var(--green)">P1</span>: <span id="n-p1" style="font-family:monospace">0</span>
+        &nbsp;<span style="color:var(--blue)">P2</span>: <span id="n-p2" style="font-family:monospace">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">📈 Session</div>
+    <div class="card-bd">
+      <div class="metric-grid">
+        <div class="metric"><div class="lb">Terminés</div><div class="vl" id="m-done">0</div><div class="sb">reconstruits</div></div>
+        <div class="metric"><div class="lb">Jobs</div><div class="vl" id="m-jobs">0</div><div class="sb">en attente</div></div>
+        <div class="metric"><div class="lb">Pts moy.</div><div class="vl" id="m-pts">—</div><div class="sb">par cible</div></div>
+        <div class="metric"><div class="lb">Dernier</div><div class="vl" id="m-last">—</div><div class="sb">streamé</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="sim-panel">
+    <div class="card-hd">🎮 Simulation</div>
+    <div class="card-bd">
+      <div class="sim-ctrl">
+        Vitesse ×
+        <input type="range" min="0.5" max="5" step="0.5" value="1" id="simSpeed"
+               oninput="document.getElementById('sv').textContent=this.value">
+        <span class="sv" id="sv">1</span>
+      </div>
+      <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn sm success" onclick="simCtrl('start')">▶ Démarrer</button>
+        <button class="btn sm" onclick="simCtrl('pause')">⏸ Pause</button>
+        <button class="btn sm" onclick="simCtrl('reset')">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">⚠ Alertes
+      <button class="btn sm" style="margin-left:auto" onclick="clearAlerts()">Effacer</button>
+    </div>
+    <div class="card-bd" style="padding:7px">
+      <div class="alert-list" id="alert-list">
+        <div style="color:var(--t2);font-size:11px;padding:3px">Aucune alerte</div>
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+<div class="content">
+
+  <div class="page active" id="page-dashboard">
+
+    <div class="card">
+      <div class="card-hd">🍇 Rang — 25 Cibles (Piquets / Pieds)
+        <span style="margin-left:auto;font-size:9px;color:var(--t2)">
+          🟢 Actif · ✅ Terminé · 🔵 Stream · ⚫ Attente
+        </span>
+      </div>
+      <div class="card-bd" id="pied-grid-container"></div>
+    </div>
+
+    <div class="card" id="pied-detail" style="display:none">
+      <div class="card-hd" id="pied-detail-title">Cible —</div>
+      <div class="card-bd">
+        <div class="detail-grid">
+          <div>
+            <div style="font-size:9.5px;color:var(--t2);margin-bottom:5px">PRÉVISUALISATION RGB</div>
+            <div class="preview-box" id="preview-box">
+              <span class="preview-ph">En attente du passage...</span>
+            </div>
+            <div class="stream-prog" id="stream-prog">
+              <div class="prog-lbl">⬇ PLY — <span id="prog-pct">0</span>%
+                (<span id="prog-c">0</span>/<span id="prog-tot">0</span>)</div>
+              <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:9.5px;color:var(--t2);margin-bottom:5px">MÉTRIQUES</div>
+            <table class="dt">
+              <tr><td>Frames P1</td><td id="dt-p1" style="color:var(--green)">—</td></tr>
+              <tr><td>Frames P2</td><td id="dt-p2" style="color:var(--blue)">—</td></tr>
+              <tr><td>Points 3D</td><td id="dt-pts">—</td></tr>
+              <tr><td>Date</td><td id="dt-date">—</td></tr>
+              <tr><td>État</td><td id="dt-state">—</td></tr>
+            </table>
+            <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
+              <a id="btn-viewer" class="btn primary" href="viewer.html" target="_blank">🔷 Viewer 3D</a>
+              <a id="btn-dl" class="btn success" href="#" download>⬇ PLY</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">💻 Log
+        <button class="btn sm" style="margin-left:auto" onclick="clearLog()">Effacer</button>
+      </div>
+      <div class="card-bd" style="padding:7px">
+        <div class="log-box" id="log-box"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page" id="page-viewer">
+    <div class="card">
+      <div class="card-hd">🔷 Viewer 3D Live</div>
+      <div class="card-bd" style="padding:7px">
+        <iframe src="viewer.html" style="width:100%;height:72vh;border:none;border-radius:6px"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-library">
+    <div class="card">
+      <div class="card-hd">📁 Modèles reconstruits
+        <button class="btn sm" style="margin-left:auto" onclick="requestPiedList()">🔄 Rafraîchir</button>
+      </div>
+      <div class="card-bd" style="padding:7px">
+        <table class="lib-table">
+          <thead><tr><th>Cible</th><th>Date</th><th>Points</th><th>PLY</th><th>3D</th></tr></thead>
+          <tbody id="lib-tbody">
+            <tr><td colspan="5" style="color:var(--t2);padding:12px">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const html = document.documentElement;
+let isDark = true;
+
+function applyTheme(dark) {
+  isDark = dark;
+  html.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const btn = document.getElementById('theme-btn');
+  btn.textContent = dark ? '🌙 Nuit' : '☀️ Jour';
+  localStorage.setItem('ims-theme', dark ? 'dark' : 'light');
+}
+function toggleTheme() { applyTheme(!isDark); }
+
+const saved = localStorage.getItem('ims-theme');
+if (saved) applyTheme(saved === 'dark');
+else applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+// ➔ SÉCURITÉ WEBSOCKET : Assure que le port 8765 est ciblé vers localhost
+const host = location.hostname || "127.0.0.1";
+const WS_URL = `ws://${host}:8765`;
+const N_PIEDS = 25, PIQUETS = 5;
+
+const S = {
+  ws:null, reconn:null, pieds:{}, sel:null,
+  chunks:{}, done:0, totalPts:0, simMode:true,
+};
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+function buildGrid() {
+  const c = document.getElementById('pied-grid-container');
+  c.innerHTML = '';
+  for (let pq=0; pq<PIQUETS; pq++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'piquet-label';
+    lbl.textContent = `Groupe ${pq+1}`;
+    c.appendChild(lbl);
+    const row = document.createElement('div');
+    row.className = 'pied-row';
+    for (let i=1; i<=5; i++) {
+      const n   = pq*5+i;
+      const id  = `pied${String(n).padStart(2,'0')}`;
+      const btn = document.createElement('button');
+      btn.className = 'pied-btn';
+      btn.id = `pb-${id}`;
+      btn.innerHTML = `<span>⚫</span><span>${n}</span>`;
+      btn.onclick = () => selectPied(id);
+      row.appendChild(btn);
+    }
+    c.appendChild(row);
+  }
+}
+
+function setPiedState(id, st) {
+  let gridId = id;
+  if (id.startsWith('piquetee')) gridId = id.replace('piquetee', 'pied');
+  if (id.startsWith('piquet'))   gridId = id.replace('piquet', 'pied');
+
+  const btn = document.getElementById(`pb-${gridId}`);
+  if (!btn) return;
+
+  btn.className = 'pied-btn';
+  const map = {
+    IDLE:['⚫',''],PASS1_RECORDING:['🟢','p-active'],TURNING:['🔄','p-active'],
+    PASS2_RECORDING:['🟢','p-active'],PROCESSING:['⚙️','p-active'],
+    STREAMING:['🔵','p-stream'],DONE:['✅','p-done'],
+  };
+  const [icon,cls] = map[st]||['⚫',''];
+  if(cls) btn.classList.add(cls);
+  if(S.sel===id) btn.classList.add('p-sel');
+  
+  const num = id.replace(/[^0-9]/g, ''); 
+  btn.innerHTML = `<span>${icon}</span><span>${num}</span>`;
+}
+
+function selectPied(id) {
+  S.sel = id;
+  document.querySelectorAll('.pied-btn').forEach(b=>b.classList.remove('p-sel'));
+  
+  let gridId = id;
+  if (id.startsWith('piquetee')) gridId = id.replace('piquetee', 'pied');
+  if (id.startsWith('piquet'))   gridId = id.replace('piquet', 'pied');
+
+  const btn = document.getElementById(`pb-${gridId}`);
+  if(btn) btn.classList.add('p-sel');
+  
+  const det = document.getElementById('pied-detail');
+  det.style.display = 'block';
+  document.getElementById('pied-detail-title').textContent = `Cible ${id.replace(/[^0-9]/g, '')} — Détail`;
+  
+  const p = S.pieds[id]||{};
+  document.getElementById('dt-p1').textContent    = p.n_p1||'—';
+  document.getElementById('dt-p2').textContent    = p.n_p2||'—';
+  document.getElementById('dt-pts').textContent   = p.n_pts ? p.n_pts.toLocaleString('fr') : '—';
+  document.getElementById('dt-date').textContent  = p.date||'—';
+  document.getElementById('dt-state').textContent = p.state||'IDLE';
+  if(p.ply_path){
+    const dl = document.getElementById('btn-dl');
+    dl.href=`/${p.ply_path}`; dl.download=`${id}_${p.date}.ply`;
+  }
+}
+
+const FSM = ['IDLE','PASS1_RECORDING','TURNING','PASS2_RECORDING','PROCESSING'];
+function updateFSM(id, state, p1, p2) {
+  document.getElementById('active-pied').textContent = id;
+  document.getElementById('n-p1').textContent = p1||0;
+  document.getElementById('n-p2').textContent = p2||0;
+  const idx = FSM.indexOf(state);
+  FSM.forEach((s,i)=>{
+    const el = document.getElementById('s-'+s);
+    if(!el) return;
+    el.className = 'fsm-step';
+    if(i<idx) el.classList.add('done');
+    if(i===idx) el.classList.add('current');
+  });
+}
+
+function updateGPS(msg) {
+  document.getElementById('gps-x').textContent     = msg.x_l93.toFixed(3)+' m';
+  document.getElementById('gps-y').textContent     = msg.y_l93.toFixed(3)+' m';
+  document.getElementById('gps-frame').textContent = msg.frame;
+  const qc = {1:'q1',2:'q2',5:'q5'}[msg.quality]||'q5';
+  document.getElementById('gps-q').innerHTML =
+    `<span class="q-badge ${qc}">Q=${msg.quality}</span>`;
+  const ph=msg.phase||'IDLE', el=document.getElementById('phase-ind');
+  el.className='phase-ind ph-idle';
+  if(ph==='ALLER'){el.className='phase-ind ph-aller';el.textContent='→ ALLER';}
+  else if(ph==='RETOUR'){el.className='phase-ind ph-retour';el.textContent='← RETOUR';}
+  else el.textContent='⬤ IDLE';
+}
+
+function onPlyStart(msg){
+  S.chunks[msg.pied_id]={arr:[],total:msg.total_chunks};
+  document.getElementById('stream-prog').classList.add('on');
+  document.getElementById('prog-tot').textContent=msg.total_chunks;
+  document.getElementById('m-last').textContent=msg.pied_id.replace(/[^0-9]/g, '');
+  setPiedState(msg.pied_id,'STREAMING');
+  log('info',`⬇ Streaming ${msg.pied_id} (${(msg.total_size/1024).toFixed(0)} Ko)`);
+}
+function onPlyChunk(msg){
+  const c=S.chunks[msg.pied_id];if(!c)return;
+  c.arr.push(Uint8Array.from(atob(msg.data),x=>x.charCodeAt(0)));
+  const pct=Math.round((msg.chunk_idx+1)/msg.total_chunks*100);
+  document.getElementById('prog-pct').textContent=pct;
+  document.getElementById('prog-c').textContent=msg.chunk_idx+1;
+  document.getElementById('prog-fill').style.width=pct+'%';
+}
+function onPlyDone(msg){
+  document.getElementById('stream-prog').classList.remove('on');
+  document.getElementById('prog-fill').style.width='0%';
+  log('ok',`✔ PLY ${msg.pied_id} — ${msg.n_points.toLocaleString('fr')} pts`);
+  if(!S.pieds[msg.pied_id])S.pieds[msg.pied_id]={};
+  Object.assign(S.pieds[msg.pied_id],{n_pts:msg.n_points,date:msg.date,state:'DONE'});
+  S.done++;S.totalPts+=msg.n_points;
+  document.getElementById('m-done').textContent=S.done;
+  document.getElementById('m-pts').textContent=
+    Math.round(S.totalPts/S.done).toLocaleString('fr');
+  setPiedState(msg.pied_id,'DONE');
+  if(S.sel===msg.pied_id)selectPied(msg.pied_id);
+  const c=S.chunks[msg.pied_id];
+  if(c){
+    const total=c.arr.reduce((s,x)=>s+x.length,0);
+    const buf=new Uint8Array(total);let off=0;
+    for(const x of c.arr){buf.set(x,off);off+=x.length;}
+    const url=URL.createObjectURL(new Blob([buf],{type:'application/octet-stream'}));
+    const dl=document.getElementById('btn-dl');
+    dl.href=url;dl.download=`${msg.pied_id}_${msg.date}.ply`;
+    try{new BroadcastChannel('ply').postMessage({pied_id:msg.pied_id,date:msg.date,buf:buf.buffer});}catch(e){}
+    delete S.chunks[msg.pied_id];
+  }
+}
+
+function requestPiedList(){
+  if(S.ws&&S.ws.readyState===WebSocket.OPEN)
+    S.ws.send(JSON.stringify({type:'list_pieds'}));
+}
+
+function renderLib(pieds){
+  const tb = document.getElementById('lib-tbody');
+  if (tb) tb.innerHTML = '';
+  
+  if(!pieds || !pieds.length){
+    if (tb) tb.innerHTML='<tr><td colspan="5" style="color:var(--t2);padding:12px">Aucun modèle 3D disponible</td></tr>';
+    return;
+  }
+  
+  tb.innerHTML=pieds.map(p=>`
+    <tr>
+      <td style="color:var(--t0)">${p.pied_id}</td>
+      <td>${p.date}</td>
+      <td style="color:var(--green)">${(p.n_points||0).toLocaleString('fr')}</td>
+      <td><a href="/${p.ply_path}" download style="color:var(--blue)">⬇</a></td>
+      <td><a href="viewer.html?pied=${p.pied_id}&date=${p.date}"
+             style="color:var(--purple)" target="_blank">🔷</a></td>
+    </tr>`).join('');
+}
+
+function log(level,msg){
+  const box=document.getElementById('log-box');
+  const ts=new Date().toTimeString().slice(0,8);
+  const el=document.createElement('span');
+  el.className=`ll ${level}`;
+  el.innerHTML=`<span class="ts">[${ts}]</span>${msg}`;
+  box.appendChild(el);box.appendChild(document.createElement('br'));
+  box.scrollTop=box.scrollHeight;
+  while(box.childElementCount>400)box.removeChild(box.firstChild);
+}
+function clearLog(){document.getElementById('log-box').innerHTML='';}
+
+function addAlert(msg,sev,simF){
+  const list=document.getElementById('alert-list');
+  if(list.querySelector('div[style]'))list.innerHTML='';
+  const ts=new Date().toTimeString().slice(0,8);
+  const el=document.createElement('div');
+  el.className=`al ${simF?'sim':sev}`;
+  el.innerHTML=`<span class="al-ts">${ts}</span>${msg}`;
+  list.insertBefore(el,list.firstChild);
+  if(list.children.length>20)list.removeChild(list.lastChild);
+  log(simF?'sim':sev,msg);
+}
+function clearAlerts(){
+  document.getElementById('alert-list').innerHTML=
+    '<div style="color:var(--t2);font-size:11px;padding:3px">Aucune alerte</div>';
+}
+
+function simCtrl(cmd){
+  if(S.ws&&S.ws.readyState===WebSocket.OPEN)
+    S.ws.send(JSON.stringify({type:'sim_ctrl',cmd,
+      speed:parseFloat(document.getElementById('simSpeed').value)}));
+  log('sim',`Commande sim : ${cmd}`);
+}
+
+function connectWS(){
+  log('info',`Connexion → ${WS_URL}`);
+  const ws=new WebSocket(WS_URL);S.ws=ws;
+  ws.onopen=()=>{
+    document.getElementById('ws-dot').classList.add('on');
+    document.getElementById('ws-label').textContent='Connecté';
+    log('ok','WebSocket connecté');
+    requestPiedList();
+    ws.send(JSON.stringify({type:'get_mode'}));
+  };
+  ws.onclose=()=>{
+    document.getElementById('ws-dot').classList.remove('on');
+    document.getElementById('ws-label').textContent='Déconnecté';
+    log('warn','WebSocket déconnecté — reconnexion 3s...');
+    clearTimeout(S.reconn);S.reconn=setTimeout(connectWS,3000);
+  };
+  ws.onerror=()=>log('err','WebSocket erreur');
+  ws.onmessage=e=>{
+      try {
+          let msg = JSON.parse(e.data);
+          dispatch(msg);
+      } catch (err) {
+          console.error(err);
+      }
+  };
+}
+
+function dispatch(msg){
+  switch(msg.type){
+    case 'hello': { log('info',`Robot : ${msg.message}`); break; }
+    case 'mode': {
+      S.simMode=msg.mode==='sim';
+      const b=document.getElementById('mode-badge');
+      b.className=`mode-badge ${S.simMode?'mode-sim':'mode-real'}`;
+      b.textContent=S.simMode?'SIM':'RÉEL';
+      document.getElementById('sim-panel').style.display=S.simMode?'block':'none';
+      break;
+    }
+    case 'status': {
+      if(!S.pieds[msg.pied_id])S.pieds[msg.pied_id]={};
+      Object.assign(S.pieds[msg.pied_id],{state:msg.state,n_p1:msg.n_frames_p1,n_p2:msg.n_frames_p2});
+      setPiedState(msg.pied_id,msg.state);
+      updateFSM(msg.pied_id,msg.state,msg.n_frames_p1,msg.n_frames_p2);
+      if(S.sel===msg.pied_id){
+        document.getElementById('dt-p1').textContent=msg.n_frames_p1;
+        document.getElementById('dt-p2').textContent=msg.n_frames_p2;
+        document.getElementById('dt-state').textContent=msg.state;
+      }
+      const sl={PASS1_RECORDING:`▶ ${msg.pied_id} — Passe 1`,
+                PASS2_RECORDING:`▶ ${msg.pied_id} — Passe 2`,
+                PROCESSING:`⚙ ${msg.pied_id} — 3D`};
+      if(sl[msg.state])log('info',sl[msg.state]);
+      break;
+    }
+    case 'gps_pos': {
+      updateGPS(msg);
+      document.getElementById('m-jobs').textContent=msg.jobs_queued||0;
+      break;
+    }
+    case 'preview': {
+      if(S.sel===msg.pied_id)
+        document.getElementById('preview-box').innerHTML=
+          `<img src="data:image/jpeg;base64,${msg.jpeg}" alt="preview">`;
+      break;
+    }
+    case 'ply_start': { onPlyStart(msg); break; }
+    case 'ply_chunk': { onPlyChunk(msg); break; }
+    case 'ply_done': { onPlyDone(msg); break; }
+    case 'alert': { addAlert(msg.message,msg.severity||'warn',msg.sim||false); break; }
+    
+    case 'pied_list': {
+      if(msg.pieds && msg.pieds.length > 0) {
+        renderLib(msg.pieds);
+        msg.pieds.forEach(p => {
+          if (!S.pieds[p.pied_id]) S.pieds[p.pied_id] = {};
+          Object.assign(S.pieds[p.pied_id], { n_pts: p.n_points, date: p.date, state: 'DONE', ply_path: p.ply_path });
+          setPiedState(p.pied_id, 'DONE');
+        });
+      } else {
+        renderLib([]); 
+      }
+      break;
+    }
+      
+    case 'ping': { if(S.ws)S.ws.send(JSON.stringify({type:'pong'})); break; }
+  }
+}
+
+buildGrid();
+connectWS();
+log('info','Dashboard RT initialisé');
+</script>
+</body>
+</html>

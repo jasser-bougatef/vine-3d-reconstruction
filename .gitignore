@@ -1,0 +1,20 @@
+build/
+__pycache__/
+*.pyc
+venv/
+.venv/
+# field data and outputs (not published)
+realsense_data/
+Extraction_Output/
+final_Output/
+logs/
+uploads/
+*.bag
+*.db3
+*.ply
+*.pcd
+*.ubx
+*.obs
+*.shp
+*.shx
+*.dbf

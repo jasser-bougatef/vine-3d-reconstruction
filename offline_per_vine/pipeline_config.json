@@ -1,0 +1,80 @@
+{
+    "project_root": "/home/jasser/Bureau/ims/Version_Off_line_pied/",
+    "paths": {
+        "bag_input_dir":        "realsense_data",
+        "extraction_output":    "Extraction_Output",
+        "timesample_files":     "Extraction_Output/Timesample_files",
+        "ppk_pos_dir":          "Extraction_Output/PPK_pos",
+        "syn_output_dir":       "final_Output/Timesample_synchronised_files",
+        "final_output":         "final_Output",
+        "build_dir":            "build",
+        "shapefile":            "pos_pied/pos_pied.shp",
+        "run_pipeline_script":  "Run full pipeline.py",
+        "pied_jobs_summary":    "pied_jobs_summary.csv",
+        "logo_path":            "logo_ims.png"
+    },
+    "bag_registry": {
+        "30-04-2025": {
+            "bag_file":  "RealSense_2025-04-30.bag",
+            "ubx_file":  "trk_20250430_0858.ubx",
+            "rot_x_deg": 180.0,
+            "rot_y_deg": 0.0,
+            "rot_z_deg": 270.0
+        },
+        "17-07-2025": {
+            "bag_file":  "RealSense_17-07-2025.bag",
+            "ubx_file":  "trk_20250717_0928.ubx",
+            "rot_x_deg": 0.0,
+            "rot_y_deg": 180.0,
+            "rot_z_deg": 270.0
+        },
+        "04-07-2025": {
+            "bag_file":  "RealSense_04-07-2025.bag",
+            "ubx_file":  "trk_20250704_1050.ubx",
+            "rot_x_deg": 180.0,
+            "rot_y_deg": 0.0,
+            "rot_z_deg": 90.0
+        }
+    },
+    "params": {
+        "default_radius": 0.35,
+        "params_extraction": {
+            "z_min":     0.4,
+            "z_max":     1.0,
+            "rot_x_deg": 180.0,
+            "rot_y_deg": 0.0,
+            "rot_z_deg": 270.0
+        },
+        "filter_3d": {
+            "voxel_size":        0.005,
+            "use_statistical":   false,
+            "use_radius_filter": true,
+            "eps":               0.12,
+            "min_points":        10,
+            "min_cluster_size":  500,
+            "nb_neighbors":      10,
+            "std_ratio":         1.5,
+            "radius":            0.1,
+            "min_radius_points": 10,
+            "color_filter": {
+                "enabled": true,
+                "hue_min": 180,
+                "hue_max": 320,
+                "sat_min": 40,
+                "val_min": 30,
+                "white_sat_max": 40,
+                "white_val_min": 180
+            }
+        },
+        "frame_reduction": {
+            "enabled": true,
+            "stride": 2
+        },
+        "registration": {
+            "voxel_size_reg":     0.02,
+            "window_size":        4,
+            "voxel_size_merge":   0.005,
+            "sliding_voxel_size": 0.01
+        }
+    }
+}

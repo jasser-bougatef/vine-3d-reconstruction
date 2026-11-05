@@ -1,0 +1,149 @@
+{
+  "_info": {
+    "version": "3.0",
+    "projet": "IMS Bordeaux — Pipeline 3D Vigne Temps Réel",
+    "stage": "M1 Machines Robots Systèmes — SIGMA Clermont",
+    "equipe": "MOTIVE — IMS Bordeaux UMR 5218",
+    "description": "Fichier de configuration central. Tous les scripts lisent ce fichier au démarrage."
+  },
+  "paths": {
+    "_comment": "Chemins relatifs à la racine du projet (là où ce JSON se trouve)",
+    "project_root": ".",
+    "build_dir": "build",
+    "extractor_binary": "build/auto_extractor",
+    "bag_input_dir": "realsense_data",
+    "extraction_output": "Extraction_Output",
+    "final_output": "final_Output",
+    "shapefile": "pos_pied.shp",
+    "logs_dir": "logs",
+    "webapp_dir": "webapp",
+    "scripts_gps_dir": "scripts_GPS",
+    "all_pipeline_3d": "all_pipeline_3D.py",
+    "rt_streamer": "rt_streamer.py",
+    "timesample_files": "Extraction_Output/Timesample_files",
+    "ppk_pos_dir": "Extraction_Output/PPK_pos",
+    "synchronized_files_dir": "final_Output/Timesample_synchronised_files"
+  },
+  "camera": {
+    "_comment": "Intel RealSense D435i — paramètres flux et enregistrement",
+    "depth_width": 640,
+    "depth_height": 480,
+    "depth_format": "z16",
+    "color_width": 640,
+    "color_height": 480,
+    "color_format": "rgb8",
+    "fps": 30,
+    "bag_extension": ".db3",
+    "_note_ext": "pyrealsense2 >= 2.56 exige .db3 (pas .bag) pour enable_record_to_file",
+    "startup_delay_s": 1.2,
+    "_note_delay": "Délai pour laisser la caméra démarrer avant d'enregistrer (PerPassRecorder)",
+    "stop_delay_s": 0.5,
+    "_note_stop": "Délai après arrêt pipeline pour flush des dernières frames"
+  },
+  "extractor_cpp": {
+    "_comment": "Paramètres passés au binaire C++ auto_extractor via CLI --arg",
+    "z_min": 0.3,
+    "z_max": 1.0,
+    "rot_x_deg": 0.0,
+    "rot_y_deg_pass1": 0.0,
+    "rot_y_deg_pass2": 180.0,
+    "rot_z_deg": 270.0,
+    "_note_z": "z_min/z_max filtrent la profondeur en mètres (distance caméra→objet)",
+    "_note_rot_y_p2": "rot_y=180° pour la passe retour : la caméra filme l'autre face du tronc"
+  },
+  "pipeline_3d": {
+    "_comment": "Paramètres PointCloudFilter + SlidingWindowRegistration (all_pipeline_3D.py)",
+    "filter": {
+      "min_distance": 0.3,
+      "max_distance": 1.0,
+      "filter_mode": "z",
+      "rotate_output": true,
+      "voxel_size": 0.005,
+      "use_statistical": false,
+      "use_radius_filter": true,
+      "eps": 0.12,
+      "min_points": 10,
+      "min_cluster_size": 500,
+      "nb_neighbors": 10,
+      "std_ratio": 1.5,
+      "radius": 0.1,
+      "min_radius_points": 10
+    },
+    "registration": {
+      "voxel_size_reg": 0.02,
+      "window_size": 4,
+      "voxel_size_merge": 0.005,
+      "sliding_voxel_size": 0.01
+    }
+  },
+  "gps": {
+    "_comment": "U-blox F9P — mode réel et correction PPK",
+    "port": "/dev/ttyACM0",
+    "baud_rate": 115200,
+    "detection_radius_m": 0.35,
+    "_note_radius": "Demi-fenêtre Y Lambert93 autour de chaque pied pour le géofencing (mode real/sim)",
+    "lever_arm": {
+      "_comment": "Bras de levier antenne GPS → caméra (mètres, repère robot)",
+      "dx_m": -0.24,
+      "dy_m": -0.26,
+      "dz_m": 0.0
+    },
+    "ppk": {
+      "rgp_station": "BXME",
+      "crs_output": "EPSG:2154",
+      "crs_input": "EPSG:4326",
+      "max_gap_s": 2.0,
+      "quality_filter": [
+        1,
+        2
+      ],
+      "_note_quality": "Q=1 fixe (idéal), Q=2 float (acceptable), Q=5 seul (dégradé, à éviter)"
+    }
+  },
+  "modes": {
+    "_comment": "Paramètres de comportement pour chaque mode",
+    "manual": {
+      "frame_sample_hz": 10,
+      "_note": "Fréquence d'échantillonnage des frames pendant l'enregistrement manuel (S=start/stop)",
+      "ui_refresh_hz": 2,
+      "log_history_size": 100,
+      "log_display_lines": 7
+    },
+    "auto": {
+      "_comment": "Mode real/sim — géofencing GPS automatique (RobotController)",
+      "sim_speed": 1.0,
+      "sim_step_m": 0.12,
+      "sim_interval_s": 0.1,
+      "sim_pause_turnaround_s": 2.5,
+      "sim_pause_restart_s": 3.0,
+      "sim_gps_noise_sigma_m": 0.03
+    },
+    "synthetic_ply": {
+      "_comment": "PLY synthétiques pour --sim-ply (tronc + feuillage génératif)",
+      "n_frames": 20,
+      "n_points": 6000,
+      "trunk_radius_m": 0.08,
+      "trunk_height_m": 1.2,
+      "foliage_spread_m": 0.22,
+      "frame_offset_m": 0.025
+    }
+  },
+  "network": {
+    "_comment": "Ports réseau — WebSocket, HTTP statique, Streamlit",
+    "websocket_port": 8765,
+    "http_port": 8080,
+    "streamlit_port": 8501,
+    "ply_chunk_bytes": 65536,
+    "_note_chunk": "Taille des chunks PLY en base64 envoyés via WebSocket (64 Ko)"
+  },
+  "keyboard": {
+    "_comment": "Touches du mode manuel (ManualController) — pour référence et documentation",
+    "start_stop": "s",
+    "next_pied": "n  ou  →",
+    "prev_pied": "p  ou  ←",
+    "toggle_pass": "b",
+    "goto_pass1": "a",
+    "reconstruct": "r",
+    "quit": "q  ou  Esc"
+  }
+}
